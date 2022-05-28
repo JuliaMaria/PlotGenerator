@@ -1,29 +1,62 @@
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
-
-def object_to_string(type, name):
-    return f"{type}({name})"
+# TODO Load operators and event effects
 
 
 class DomainDatabase:
     def __init__(self, domain_filename):
-        self.objects = []  # objects
+        self.objects = defaultdict(list)  # objects
         self.relations = []  # relations
         self.predicates = []  # predicates
-        self.operators = []  # operators
-        self.effects = []  # eventeffects
 
         tree = ET.parse(domain_filename)
         root = tree.getroot()
 
         for child in root:
-            print(child.tag)
+
+            # print(child.tag)
 
             if child.tag == "objects":
                 for object in child:
-                    self.objects.append(object_to_string(object.attrib["type"], object.attrib["name"]))
+                    self.objects[object.attrib["type"]].append(object.attrib["name"])
 
-        print(self.objects)
+            if child.tag == "relations":
+                for relation in child:
+                    parameters = []
+                    for parameter in relation:
+                        parameters.append(parameter.attrib["value"])
+                    self.relations.append(self.relation_representation(relation.attrib["name"], parameters))
 
+            if child.tag == "predicates":
+                for predicate in child:
+                    parameters = []
+                    for parameter in predicate:
+                        parameters.append(parameter.attrib)
+                    self.predicates.append(
+                        self.predicate_representation(
+                            predicate.attrib.pop('name'),
+                            predicate.attrib,
+                            parameters
+                        )
+                    )
 
-dd = DomainDatabase("../Domain/World.xml")
+        # print(self.objects)
+        # print(self.relations)
+        # print(self.predicates)
+
+    def object_representation(self, type, name):
+        return {"type": type, "name": name}
+
+    def relation_representation(self, name, values):
+        return {"name": name, "values": values}
+
+    def predicate_representation(self, name, attributes, parameters):
+        return {
+            "name": name,
+            "attributes": attributes,
+            "parameters": parameters
+        }
+
+#
+# dd = DomainDatabase("PlotGenerator/Domain/World.xml")
