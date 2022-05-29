@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
-# TODO Load operators and event effects
+# TODO Load operators and event effects to domain database
 
 
 class DomainDatabase:
@@ -57,6 +57,3 @@ class DomainDatabase:
             "attributes": attributes,
             "parameters": parameters
         }
-
-#
-# dd = DomainDatabase("PlotGenerator/Domain/World.xml")
