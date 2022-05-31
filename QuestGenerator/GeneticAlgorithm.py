@@ -8,11 +8,12 @@ from tqdm import tqdm
 
 
 class GeneticAlgorithm:
-    def __init__(self, domain_database, population_size=100, mutation_prob=0.2, start_size=(1, 31), goal_size=(1, 11)):
+    def __init__(self, domain_database, population_size=100, mutation_prob=0.2, elitism_factor=0.2, start_size=(1, 31), goal_size=(1, 11)):
         self.population_size = population_size
         self.start_size = start_size
         self.goal_size = goal_size
         self.mutation_prob = mutation_prob
+        self.elitism_factor = elitism_factor
 
         self.dd = domain_database
 
@@ -159,8 +160,24 @@ class GeneticAlgorithm:
         return new_population
 
     def select_best_individuals(self):
-        # TODO Perform selection as described in the paper
-        return self.population
+        elite_individuals_to_copy = int(self.elitism_factor*self.population_size)
+        sorted_individuals = sorted(self.population, key=lambda x: x["fitness"], reverse=True)
+
+        elite_individuals = sorted_individuals[:elite_individuals_to_copy]
+        remaining_individuals = sorted_individuals[elite_individuals_to_copy:]
+
+        max_sum = sum([individual["fitness"] for individual in remaining_individuals])
+        if max_sum != 0:
+            selection_probs = [individual["fitness"] / max_sum for individual in remaining_individuals]
+        else:
+            selection_probs = [1 / len(remaining_individuals) for individual in remaining_individuals]
+
+        chosen_remaining_individuals = [
+            remaining_individuals[idx]
+            for idx in np.random.choice(len(remaining_individuals), p=selection_probs, size=self.population_size-elite_individuals_to_copy)
+        ]
+
+        return elite_individuals + chosen_remaining_individuals
 
     def __call__(self, generations, num_quests):
         quests = []
