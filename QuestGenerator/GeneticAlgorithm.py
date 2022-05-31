@@ -73,25 +73,29 @@ class GeneticAlgorithm:
     def perform_planning(self, individual):
         pddl_individual = self.convert_indivdual_to_pddl_format(individual)
         actions_plan = []  # TODO Run HSP planner
-        return [individual, actions_plan]
+        return actions_plan
 
     def convert_indivdual_to_pddl_format(self, individual):
         # TODO Convert individual to PDDL format to run with HSP planner
         return individual
 
-    def evaluate_individual(self, individual):
+    def evaluate_individual(self, individual, desired_story_arc):
         # TODO Evaluate individual as described in the paper
         #  using HSP planner to generate actions for given start and goal
         #  and calculate fitness according to event effects from domain database
+        actions_plan = self.perform_planning(individual)
+        actions = []  # TODO Extract actions from plan
+        tension_arc = [self.dd.event_effects[action] for action in actions]
+        # TODO Calculate loss between two story arcs
         return 0
 
-    def evaluate_population(self, population):
+    def evaluate_population(self, population, desired_story_arc):
         evaluated_population = []
         for individual in population:
             evaluated_population.append(
                 {
                     "individual": individual,
-                    "fitness": self.evaluate_individual(individual)
+                    "fitness": self.evaluate_individual(individual, desired_story_arc)
                 }
             )
         return evaluated_population
@@ -179,24 +183,24 @@ class GeneticAlgorithm:
 
         return elite_individuals + chosen_remaining_individuals
 
-    def __call__(self, generations, num_quests):
+    def __call__(self, generations, num_quests, desired_story_arc):
         quests = []
 
         for quest in range(num_quests):
             population = self.generate_initial_population()
-            self.population = self.evaluate_population(population)
+            self.population = self.evaluate_population(population, desired_story_arc)
 
             for generation in range(generations):
                 best_individuals = self.select_best_individuals()
                 population = self.perform_crossover(best_individuals)
                 population = self.perform_mutation(population)
-                self.population = self.evaluate_population(population)
+                self.population = self.evaluate_population(population, desired_story_arc)
 
             best_quest = max(self.population, key=lambda x: x["fitness"])
             quests.append(best_quest["individual"])
 
             # TODO Update domain database with new quest
 
-        quests_with_plans = [self.perform_planning(quest) for quest in quests]
+        quests_with_plans = [(quest, self.perform_planning(quest)) for quest in quests]
 
         return quests_with_plans

@@ -4,7 +4,7 @@ from PlotGenerator.QuestGenerator.GeneticAlgorithm import GeneticAlgorithm
 
 dd = DomainDatabase("PlotGenerator/Domain/World.xml")
 ga = GeneticAlgorithm(dd)
-quests_with_plans = ga(generations=5, num_quests=5)
+quests_with_plans = ga(generations=5, num_quests=5, desired_story_arc=None)
 
 for quest_with_plan in quests_with_plans:
     print(f"Start: {quest_with_plan[0][0]}")
