@@ -1,7 +1,11 @@
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
-# TODO Load operators and event effects to domain database
+tension_mapper = {
+    "+": 1,
+    "-": -1,
+    "=": 0
+}
 
 
 class DomainDatabase:
@@ -9,6 +13,7 @@ class DomainDatabase:
         self.objects = defaultdict(list)  # objects
         self.relations = []  # relations
         self.predicates = []  # predicates
+        self.event_effects = {}  # event effects
 
         tree = ET.parse(domain_filename)
         root = tree.getroot()
@@ -41,9 +46,14 @@ class DomainDatabase:
                         )
                     )
 
+            if child.tag == "eventeffects":
+                for eventeffect in child:
+                    self.event_effects[eventeffect.attrib["name"]] = tension_mapper[eventeffect.attrib["tension"]]
+
         # print(self.objects)
         # print(self.relations)
         # print(self.predicates)
+        # print(self.event_effects)
 
     def object_representation(self, type, name):
         return {"type": type, "name": name}
