@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 # TODO Take domain database constraints into account
+# TODO Remove duplicate literals in individuals
 
 
 class GeneticAlgorithm:
@@ -67,7 +68,7 @@ class GeneticAlgorithm:
 
     def generate_initial_population(self):
         population = []
-        for i in tqdm(range(self.population_size)):
+        for i in range(self.population_size):
             individual = self.generate_random_individual()
             population.append(individual)
         return population
@@ -102,6 +103,29 @@ class GeneticAlgorithm:
             )
         return evaluated_population
 
+    def remove_invalid_relations(self, individual):
+        # Remove relations in individual that don't match objects of its plot
+        objects = []
+        for literal in individual[0]:
+            if "type" in literal.keys():
+                objects.append(literal["name"])
+
+        for literal in individual[0]:
+            if "values" in literal.keys():
+                for value in literal["values"]:
+                    if value not in objects:
+                        individual[0].remove(literal)
+                        break
+
+        for literal in individual[1]:
+            if "values" in literal.keys():
+                for value in literal["values"]:
+                    if value not in objects:
+                        individual[1].remove(literal)
+                        break
+
+        return individual
+
     def perform_crossover(self, selected_individuals):
         # Select pairs of individuals for reproduction at random
         all_pairs = list(itertools.combinations_with_replacement(selected_individuals, 2))
@@ -130,6 +154,9 @@ class GeneticAlgorithm:
                 individual_2[0][:start_split_point] + individual_1[0][start_split_point:],
                 individual_2[1][:goal_split_point] + individual_1[1][goal_split_point:]
             ]
+
+            child_1 = self.remove_invalid_relations(child_1)
+            child_2 = self.remove_invalid_relations(child_2)
 
             new_population.append(child_1)
             new_population.append(child_2)
@@ -234,6 +261,7 @@ class GeneticAlgorithm:
                 best_individuals = self.select_best_individuals()
                 population = self.perform_crossover(best_individuals)
                 population = self.perform_mutation(population)
+                population = [self.remove_invalid_relations(individual) for individual in population]
                 self.population = self.evaluate_population(population, desired_story_arc)
 
             best_quest = max(self.population, key=lambda x: x["fitness"])
