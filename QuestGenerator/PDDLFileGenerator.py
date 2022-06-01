@@ -57,13 +57,11 @@ def action_representation(operator):
     return a
 
 
-def parse_to_pddl(filename: str, world_name: str = None):
+def parse_to_pddl(filename: str):
     dd = DomainDatabase(filename)
 
     filename_no_ext = os.path.splitext(filename)[0]
-
-    if not world_name:
-        world_name = filename_no_ext.split("/")[-1]
+    world_name = dd.name
 
     with open(filename_no_ext+'.txt', 'w') as f:
         f.write(f"(define (domain {world_name})")

@@ -1,3 +1,4 @@
+import os
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
@@ -9,7 +10,14 @@ tension_mapper = {
 
 
 class DomainDatabase:
-    def __init__(self, domain_filename):
+    def __init__(self, domain_filename, world_name=None):
+        filename_no_ext = os.path.splitext(domain_filename)[0]
+
+        if world_name:
+            self.name = world_name
+        else:
+            self.name = filename_no_ext.split("/")[-1]
+
         self.objects = defaultdict(list)  # objects
         self.relations = []  # relations
         self.predicates = []  # predicates
