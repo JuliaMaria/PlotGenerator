@@ -75,9 +75,61 @@ class GeneticAlgorithm:
         actions_plan = []  # TODO Run HSP planner
         return actions_plan
 
-    def convert_indivdual_to_pddl_format(self, individual):
-        # TODO Convert individual to PDDL format to run with HSP planner
-        return individual
+    def convert_indivdual_to_pddl_format(self, individual, name="converted_ind"):
+        # returns the resulting pddl filename
+        filename = name + '.txt'
+
+        with open(filename, 'w') as f:
+            f.write(f"(define (problem {name})")
+            f.write(f"\n\t(:domain {self.dd.name})")
+
+        # objects
+        objects = [p for p in individual[0] if 'type' in p.keys()]
+        objects = list({v['name']: v for v in objects}.values())
+
+        with open(filename, 'a') as f:
+            f.write("\n\t(:objects")
+
+            for o in objects:
+                f.write(f"\n\t\t({o['name']} - {o['type']})")
+
+            f.write("\n\t)")
+
+        # preconditions
+        preconditions = [p for p in individual[0] if 'values' in p.keys()]
+        preconditions = list({v['name']: v for v in preconditions}.values())
+
+        with open(filename, 'a') as f:
+            f.write("\n\t(:init")
+
+            for precondition in preconditions:
+                f.write(f"\n\t\t({precondition['name']}")
+                for v in precondition['values']:
+                    f.write(f" {v}")
+                f.write(")")
+
+            f.write("\n\t)")
+
+        # effects
+        effects = individual[1]
+        effects = list({v['name']: v for v in effects}.values())
+
+        with open(filename, 'a') as f:
+            f.write("\n\t(:goal")
+            f.write("\n\t\t(and")
+
+            for effect in effects:
+                f.write(f"\n\t\t\t({effect['name']}")
+                for v in effect['values']:
+                    f.write(f" {v}")
+                f.write(")")
+
+            f.write("\n\t\t)")
+            f.write("\n\t)")
+
+            f.write("\n)")
+
+        return filename
 
     def evaluate_individual(self, individual, desired_story_arc):
         # TODO Evaluate individual as described in the paper
