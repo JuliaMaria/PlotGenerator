@@ -13,6 +13,7 @@ class DomainDatabase:
         self.objects = defaultdict(list)  # objects
         self.relations = []  # relations
         self.predicates = []  # predicates
+        self.operators = []
         self.event_effects = {}  # event effects
 
         tree = ET.parse(domain_filename)
@@ -46,6 +47,54 @@ class DomainDatabase:
                         )
                     )
 
+            if child.tag == "operators":
+                for operator in child:
+
+                    parameters = {}
+                    for parameter in operator.find('parameters'):
+                        parameters[parameter.attrib['name']] = parameter.attrib['type']
+
+                    preconditions = []
+                    for precondition in operator.find('preconditions'):
+                        params = [param.attrib['name'] for param in precondition]
+
+                        negation = None
+                        try:
+                            if precondition.attrib['negation'] == 'true':
+                                negation = 'not'
+                        except KeyError:
+                            pass
+
+                        p = (precondition.attrib['predicate'],
+                             negation,
+                             params)
+                        preconditions.append(p)
+
+                    effects = []
+                    for effect in operator.find('effects'):
+                        params = [param.attrib['name'] for param in effect]
+
+                        negation = None
+                        try:
+                            if effect.attrib['negation'] == 'true':
+                                negation = 'not'
+                        except KeyError:
+                            pass
+
+                        e = (effect.attrib['predicate'],
+                             negation,
+                             params)
+                        effects.append(e)
+
+                    self.operators.append(
+                        self.operator_representation(
+                            operator.attrib['name'],
+                            parameters,
+                            preconditions,
+                            effects
+                        )
+                    )
+
             if child.tag == "eventeffects":
                 for eventeffect in child:
                     self.event_effects[eventeffect.attrib["name"]] = tension_mapper[eventeffect.attrib["tension"]]
@@ -66,4 +115,12 @@ class DomainDatabase:
             "name": name,
             "attributes": attributes,
             "parameters": parameters
+        }
+
+    def operator_representation(self, name, parameters, preconditions, effects):
+        return {
+            "name": name,
+            "parameters": parameters,
+            "preconditions": preconditions,
+            "effects": effects
         }
