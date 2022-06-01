@@ -99,6 +99,3 @@ def parse_to_pddl(filename: str, world_name: str = None):
 
     with open(filename_no_ext + '.txt', 'a') as f:
         f.write("\n)")
-
-filename = "C:/Users/korne/PycharmProjects/PlotGenerator/Domain/World.xml"
-parse_to_pddl(filename)
