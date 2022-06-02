@@ -7,7 +7,7 @@ from DomainDatabase.DomainDatabase import DomainDatabase
 def predicate_representation(predicate):
     r = f"\t({predicate['name']}"
     for i, p in enumerate(predicate['parameters']):
-        r += f" ?p{i+1} - {p['type']}"
+        r += f" ?p{i+1}"
     r += ")"
     return r
 
@@ -90,23 +90,23 @@ def parse_to_pddl(filename: str):
     with open(filename_no_ext+'.txt', 'a') as f:
         f.write("\n(:predicates")
         for p in dd.predicates:
-            if p["name"] not in done_predicates:
+            if p['name'] not in done_predicates:
                 f.write(f"\n{predicate_representation(p)}")
-                done_predicates.append(p["name"])
+                done_predicates.append(p['name'])
 
         for r in dd.relations:
             if r["name"] not in done_predicates:
                 f.write(f"\n{relation_representation(r)}")
-                done_predicates.append(r["name"])
+                done_predicates.append(r['name'])
         f.write("\n)")
 
     # actions
     done_actions = []
     with open(filename_no_ext + '.txt', 'a') as f:
         for a in dd.operators:
-            if a["name"] not in done_actions:
+            if a not in done_actions:
                 f.write(f"\n{action_representation(a)}")
-                done_actions.append(a["name"])
+                done_actions.append(a)
 
     with open(filename_no_ext + '.txt', 'a') as f:
         f.write("\n)")
