@@ -94,6 +94,10 @@ class DomainDatabase:
                              params)
                         effects.append(e)
 
+                        if effect.attrib['predicate'] not in [p['name'] for p in self.predicates]:
+                            self.relations.append(self.relation_representation(effect.attrib['predicate'],
+                                                                                 params))
+
                     self.operators.append(
                         self.operator_representation(
                             operator.attrib['name'],

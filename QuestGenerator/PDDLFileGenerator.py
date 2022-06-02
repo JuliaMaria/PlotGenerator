@@ -5,9 +5,17 @@ from DomainDatabase.DomainDatabase import DomainDatabase
 
 
 def predicate_representation(predicate):
-    r = f"\t\t({predicate['name']}"
+    r = f"\t({predicate['name']}"
     for i, p in enumerate(predicate['parameters']):
         r += f" ?p{i+1} - {p['type']}"
+    r += ")"
+    return r
+
+
+def relation_representation(relation):
+    r = f"\t({relation['name']}"
+    for i, p in enumerate(relation['values']):
+        r += f" ?p{i+1}"
     r += ")"
     return r
 
@@ -16,13 +24,13 @@ def action_representation(operator):
     a = f"\t(:action {operator['name']}"
 
     # parameters
-    a += "\n\t\t:parameters ("
+    a += "\n\t:parameters ("
     for param_name, param_type in operator["parameters"].items():
         a += f"?{param_name} - {param_type} "
     a += ")"
 
     # preconditions
-    a += "\n\t\t:precondition ( and"
+    a += "\n\t:precondition ( and"
     for (precondition_predicate, negation, params) in operator["preconditions"]:
         a += " ("
         if negation:
@@ -38,7 +46,7 @@ def action_representation(operator):
     a += "\t)"
 
     # effects
-    a += "\n\t\t:effect ( and"
+    a += "\n\t:effect ( and"
     for (effect_predicate, negation, params) in operator["effects"]:
         a += " ("
         if negation:
@@ -65,27 +73,32 @@ def parse_to_pddl(filename: str):
 
     with open(filename_no_ext+'.txt', 'w') as f:
         f.write(f"(define (domain {world_name})")
-        f.write("\n\t(:requirements :strips :typing)")
+        f.write("\n(:requirements :typing)")
 
     # types
     done_types = []
     with open(filename_no_ext+'.txt', 'a') as f:
-        f.write("\n\t(:types")
+        f.write("\n(:types")
         for o in dd.objects:
             if o not in done_types:
                 f.write(f" {o}")
                 done_types.append(o)
         f.write(")")
 
-    # predicates
+    # predicates and relations
     done_predicates = []
     with open(filename_no_ext+'.txt', 'a') as f:
-        f.write("\n\t(:predicates")
+        f.write("\n(:predicates")
         for p in dd.predicates:
             if p["name"] not in done_predicates:
                 f.write(f"\n{predicate_representation(p)}")
                 done_predicates.append(p["name"])
-        f.write("\n\t)")
+
+        for r in dd.relations:
+            if r["name"] not in done_predicates:
+                f.write(f"\n{relation_representation(r)}")
+                done_predicates.append(r["name"])
+        f.write("\n)")
 
     # actions
     done_actions = []
