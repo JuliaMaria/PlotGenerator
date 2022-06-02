@@ -1,7 +1,7 @@
 # TODO 1. Convert domain file from XML to PDDL
 #  2. Generate PDDL files for all individuals to pass them to planner
 import os
-from PlotGenerator.DomainDatabase.DomainDatabase import DomainDatabase
+from DomainDatabase.DomainDatabase import DomainDatabase
 
 
 def predicate_representation(predicate):
@@ -16,13 +16,13 @@ def action_representation(operator):
     a = f"\t(:action {operator['name']}"
 
     # parameters
-    a += "\n\t\t:parameters("
+    a += "\n\t\t:parameters ("
     for param_name, param_type in operator["parameters"].items():
         a += f"?{param_name} - {param_type} "
     a += ")"
 
     # preconditions
-    a += "\n\t\t:precondition( and"
+    a += "\n\t\t:precondition ( and"
     for (precondition_predicate, negation, params) in operator["preconditions"]:
         a += " ("
         if negation:
@@ -38,7 +38,7 @@ def action_representation(operator):
     a += "\t)"
 
     # effects
-    a += "\n\t\t:effect( and"
+    a += "\n\t\t:effect ( and"
     for (effect_predicate, negation, params) in operator["effects"]:
         a += " ("
         if negation:
