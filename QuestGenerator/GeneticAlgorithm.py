@@ -2,12 +2,17 @@
 import itertools
 import os
 from collections import defaultdict
+import re
 
 import numpy as np
 import subprocess
+from tqdm import tqdm
 
 # TODO Take domain database constraints into account
 # TODO Remove duplicate literals in individuals
+# TODO Add typing as operators in PDDL
+# TODO Add notequal operator to domain
+# TODO Use all objects and relations as initial state???
 
 
 class GeneticAlgorithm:
@@ -110,7 +115,7 @@ class GeneticAlgorithm:
             f.write("\n\t(:objects")
 
             for o in objects:
-                f.write(f"\n\t\t{o['name']} - {o['type']}")
+                f.write(f"\n\t\t{o['name']}")
 
             f.write("\n\t)")
 
@@ -150,15 +155,54 @@ class GeneticAlgorithm:
 
         return filename
 
-    def evaluate_individual(self, individual, desired_story_arc):
-        # TODO Evaluate individual as described in the paper
+    def extract_actions_from_plan(self, solution):
+        actions = []
+        for line in solution:
+            line = line.strip()
+            # Take into account the case with no solution
+            if line == "NO SOLUTION":
+                return None
+            if line.startswith("("):
+                line = re.sub(r"[()]+", "", line)
+                action = line.split()[0].lower()
+                actions.append(action)
+        return actions
+
+    def rescale_story_arc(self, story_arc, story_arc_scaling_factor):
+        # Rescale story arc to length of scaling_factor
+        # (index generated in range (1, story_arc_scaling_factor) as in the paper and lowered by 1 to match list indexing)
+        scaled_story_arc = [
+            story_arc[np.ceil((i-1)/story_arc_scaling_factor*(len(story_arc)-1))+1-1]
+            for i in range(1, story_arc_scaling_factor+1)
+        ]
+        return scaled_story_arc
+
+    def evaluate_individual(self, individual, desired_story_arc, story_arc_scaling_factor=10):
+        # Evaluate individual as described in the paper
         #  using HSP planner to generate actions for given start and goal
         #  and calculate fitness according to event effects from domain database
+
+        # Generate plan for individual
         solution = self.perform_planning(individual)
-        actions = []  # TODO Extract actions from plan
+        # Extract actions from plan
+        actions = self.extract_actions_from_plan(solution)
+        # Fitness is 0 for unsolvable individuals
+        if actions is None:
+            return 0
+
+        # Convert actions to tension arc
         tension_arc = [self.dd.event_effects[action] for action in actions]
-        # TODO Calculate loss between two story arcs
-        return 0
+        tension_arc = [sum(tension_arc[:i+1]) for i in range(len(tension_arc))]
+
+        # Rescale both story arcs to common time frame
+        scaled_desired_arc = self.rescale_story_arc(desired_story_arc, story_arc_scaling_factor)
+        scaled_tension_arc = self.rescale_story_arc(tension_arc, story_arc_scaling_factor)
+
+        # Calculate loss between two story arcs
+        mse = sum([(tension_p-tension_d)**2 for tension_p, tension_d in zip(scaled_tension_arc, scaled_desired_arc)])/story_arc_scaling_factor
+        fitness = len(tension_arc)/mse
+
+        return fitness
 
     def evaluate_population(self, population, desired_story_arc):
         evaluated_population = []
@@ -321,7 +365,7 @@ class GeneticAlgorithm:
     def __call__(self, generations, num_quests, desired_story_arc):
         quests = []
 
-        for quest in range(num_quests):
+        for quest in tqdm(range(num_quests)):
             population = self.generate_initial_population()
             self.population = self.evaluate_population(population, desired_story_arc)
 
