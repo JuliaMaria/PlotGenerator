@@ -1,5 +1,3 @@
-# TODO 1. Convert domain file from XML to PDDL
-#  2. Generate PDDL files for all individuals to pass them to planner
 import os
 from PlotGenerator.DomainDatabase.DomainDatabase import DomainDatabase
 
@@ -71,13 +69,13 @@ def parse_to_pddl(filename: str):
     filename_no_ext = os.path.splitext(filename)[0]
     world_name = dd.name
 
-    with open(filename_no_ext+'.txt', 'w') as f:
+    with open(filename_no_ext+'.pddl', 'w') as f:
         f.write(f"(define (domain {world_name})")
         f.write("\n(:requirements :typing)")
 
     # types
     done_types = []
-    with open(filename_no_ext+'.txt', 'a') as f:
+    with open(filename_no_ext+'.pddl', 'a') as f:
         f.write("\n(:types")
         for o in dd.objects:
             if o not in done_types:
@@ -87,7 +85,7 @@ def parse_to_pddl(filename: str):
 
     # predicates and relations
     done_predicates = []
-    with open(filename_no_ext+'.txt', 'a') as f:
+    with open(filename_no_ext+'.pddl', 'a') as f:
         f.write("\n(:predicates")
         for p in dd.predicates:
             if p['name'] not in done_predicates:
@@ -102,11 +100,11 @@ def parse_to_pddl(filename: str):
 
     # actions
     done_actions = []
-    with open(filename_no_ext + '.txt', 'a') as f:
+    with open(filename_no_ext + '.pddl', 'a') as f:
         for a in dd.operators:
             if a not in done_actions:
                 f.write(f"\n{action_representation(a)}")
                 done_actions.append(a)
 
-    with open(filename_no_ext + '.txt', 'a') as f:
+    with open(filename_no_ext + '.pddl', 'a') as f:
         f.write("\n)")

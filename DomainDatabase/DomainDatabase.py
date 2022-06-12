@@ -21,15 +21,13 @@ class DomainDatabase:
         self.objects = defaultdict(list)  # objects
         self.relations = []  # relations
         self.predicates = []  # predicates
-        self.operators = []
+        self.operators = []  # operators
         self.event_effects = {}  # event effects
 
         tree = ET.parse(domain_filename)
         root = tree.getroot()
 
         for child in root:
-
-            # print(child.tag)
 
             if child.tag == "objects":
                 for object in child:
